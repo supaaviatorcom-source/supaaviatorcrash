@@ -1,0 +1,9 @@
+{
+  "name": "Supa Aviator Crash",
+  "short_name": "Supa Aviator",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Supa Aviator Crash Demo"
+}
