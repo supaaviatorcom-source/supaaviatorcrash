@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><meta name="theme-color" content="#17222e"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Aviator Crash Demo</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b1016;color:#fff;font-family:Arial,Helvetica,sans-serif}
+  .app{max-width:520px;margin:auto;min-height:100vh;background:#11161c;overflow:hidden}
+  .browser{height:58px;background:#fff;color:#333;display:flex;align-items:center;padding:0 16px;gap:14px;font-size:17px}
+  .browser .x{font-size:30px;color:#222}.lock{color:#18854a}.url{flex:1}
+  .top{height:62px;background:#17222e;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:16px}
+  .back{font-weight:600}.full{font-size:15px}
+  .brandbar{height:74px;background:#191b1d;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+  .logo{font-size:31px;font-style:italic;font-weight:900;color:#f00845;letter-spacing:-2px}
+  .balance{font-size:18px;color:#9b9b9b}.balance b{color:#19c400}
+  .menu{font-size:28px;color:#777;margin-left:12px}
+  .history{height:58px;background:#0b0d0f;display:flex;align-items:center;gap:28px;padding:0 20px;overflow:hidden;white-space:nowrap;font-size:18px}
+  .history span:nth-child(odd){color:#9a48e9}.history span:nth-child(even){color:#159bd7}
+  .game{margin:0 10px;height:450px;border:1px solid #292d31;border-radius:27px;position:relative;overflow:hidden;background:
+    radial-gradient(ellipse at 58% 45%,rgba(21,83,121,.45),transparent 44%),
+    repeating-conic-gradient(from 250deg at 0% 100%,rgba(255,255,255,.04) 0deg 7deg,transparent 7deg 17deg),
+    #020405}
+  .grid{position:absolute;inset:0;background:linear-gradient(170deg,transparent 49%,rgba(255,255,255,.035) 50%,transparent 51%);opacity:.5}
+  .curve{position:absolute;left:0;bottom:-45px;width:96%;height:78%;border-left:8px solid #fa0648;border-top:8px solid #fa0648;border-radius:0 100% 0 0;transform:skewY(-9deg);box-shadow:0 0 18px rgba(255,0,70,.4)}
+  .fill{position:absolute;left:0;bottom:0;width:35%;height:36%;background:linear-gradient(135deg,rgba(255,0,65,.55),rgba(255,0,65,.04));clip-path:polygon(0 100%,100% 100%,100% 0,68% 25%,40% 55%,0 75%)}
+  .mult{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:76px;font-weight:800;text-shadow:0 3px 5px #000;z-index:3}
+  .plane{position:absolute;left:35%;bottom:31%;font-size:55px;transform:rotate(-17deg);filter:drop-shadow(0 4px 6px #000);z-index:4}
+  .status{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);color:#aaa;font-size:15px;z-index:5}
+  .panel{margin:10px;border-radius:25px;background:#1a1c1f;padding:10px 10px 16px}
+  .tabs{height:54px;background:#111315;border-radius:30px;display:flex;align-items:center;padding:4px;margin-bottom:12px}
+  .tab{flex:1;text-align:center;padding:12px;border-radius:26px;color:#bbb}.tab.active{background:#303236;color:#fff}
+  .betrow{display:grid;grid-template-columns:1fr 1.5fr;gap:10px}
+  .stake{background:#111315;border-radius:24px;padding:7px}
+  .step{height:55px;display:flex;align-items:center;justify-content:space-between}
+  .circle{width:43px;height:43px;border-radius:50%;background:#292d33;display:grid;place-items:center;font-size:27px;color:#aaa}
+  .amount{font-size:25px;font-weight:700}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}.chip{background:#191b1f;border-radius:18px;padding:10px;text-align:center;color:#aaa}
+  button{font:inherit;border:0}
+  .betbtn{border-radius:24px;background:#18b900;color:#fff;font-size:27px;font-weight:500;min-height:145px;box-shadow:inset 0 0 0 2px #54d33f}
+  .betbtn.cash{background:#d99200}
+  .winners{text-align:center;color:#999;margin-top:8px;font-size:13px}
+  .profitbox{margin:10px;border:1px solid #30353b;border-radius:18px;background:#111315;padding:14px}
+  .profitrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .profitlabel{color:#aaa;font-size:14px}.profitvalue{font-size:24px;font-weight:800;color:#21c400}
+  .collectbtn{margin-top:10px;width:100%;padding:13px;border-radius:14px;background:#252a30;color:#fff;font-weight:700}
+  .collectbtn:disabled{opacity:.45}
+  .notice{text-align:center;color:#73777c;font-size:12px;padding:8px 16px 22px}
+  .plus{position:fixed;right:calc(50% - 225px);bottom:18px;width:48px;height:48px;border-radius:50%;background:#292d33;color:#fff;font-size:28px;display:grid;place-items:center;box-shadow:0 4px 14px #0008}
+  @media(max-width:540px){.plus{right:18px}.game{height:410px}.mult{font-size:66px}}
+
+  .account{display:flex;gap:7px;align-items:center}
+  .account button{border:1px solid #3b424a;background:#252a30;color:#fff;border-radius:16px;padding:7px 10px;font-size:12px}
+  .account button.signup{background:#e90043;border-color:#e90043}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:18px}
+  .modal.show{display:flex}
+  .authbox{width:min(430px,100%);background:#1a1e23;border:1px solid #333;border-radius:22px;padding:22px;box-shadow:0 15px 50px #000}
+  .authhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .authhead h2{margin:0;font-size:24px}.close{background:#292d33;color:#bbb;border:0;border-radius:50%;width:36px;height:36px;font-size:23px}
+  .authbox label{display:block;color:#aaa;font-size:13px;margin:12px 0 6px}
+  .authbox input{width:100%;padding:13px;border-radius:12px;border:1px solid #363c43;background:#0e1114;color:#fff;outline:none}
+  .authsubmit{width:100%;margin-top:18px;padding:14px;border-radius:13px;background:#19b900;color:white;font-size:17px}
+  .switch{margin-top:14px;text-align:center;color:#999;font-size:13px}.switch button{background:none;color:#ff2a60;border:0}
+  .logged{font-size:12px;color:#8ee67d;display:none}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="browser"><span class="x">×</span><span class="lock">▣</span><span class="url">aviator-demo.local</span><span>⌯</span></div>
+  <div class="top"><span class="back">‹ Go Back</span><span class="full">View Fullscreen ⛶</span></div>
+  <div class="brandbar">
+    <div class="logo">Aviator</div>
+    <div class="account">
+      <span class="logged" id="loggedUser"></span>
+      <button id="loginBtn">Login</button>
+      <button class="signup" id="signupBtn">Sign Up</button>
+      <span class="balance">Demo <b id="balance">1,000.00</b> KES</span>
+      <span class="menu">☰</span>
+    </div>
+  </div>
+  <div class="history" id="history"><span>2.53x</span><span>1.12x</span><span>1.52x</span><span>1.47x</span><span>4.10x</span><span>1.84x</span><span>1.39x</span></div>
+
+
+  <div class="modal" id="authModal">
+    <div class="authbox">
+      <div class="authhead">
+        <h2 id="authTitle">Sign Up</h2>
+        <button class="close" id="closeAuth">×</button>
+      </div>
+      <div id="nameField">
+        <label>Full name</label>
+        <input id="authName" type="text" placeholder="Enter your name">
+      </div>
+      <label>Email or phone</label>
+      <input id="authContact" type="text" placeholder="Email or phone number">
+      <label>Password</label>
+      <input id="authPassword" type="password" placeholder="Create a password">
+      <button class="authsubmit" id="authSubmit">Create Account</button>
+      <div class="switch" id="authSwitch">Already have an account?
+        <button id="switchAuth">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game">
+    <div class="grid"></div><div class="fill" id="fill"></div><div class="curve"></div>
+    <div class="mult" id="mult">1.00x</div><div class="plane">✈</div>
+    <div class="status" id="status">Place your demo bet</div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs"><div class="tab active">Bet</div><div class="tab">Auto</div></div>
+    <div class="betrow">
+      <div class="stake">
+        <div class="step"><button class="circle" id="minus">−</button><div class="amount" id="stake">10.00</div><button class="circle" id="plus">+</button></div>
+        <div class="chips"><button class="chip" data-v="100">100</button><button class="chip" data-v="250">250</button><button class="chip" data-v="1000">1,000</button><button class="chip" data-v="25000">25,000</button></div>
+      </div>
+      <button class="betbtn" id="bet">Bet<br><span id="betText">10.00 KES</span></button>
+    </div>
+    <div class="winners" id="winners">Virtual winners: 0</div>
+  </div>
+  <div class="profitbox">
+    <div class="profitrow">
+      <div class="profitlabel">Session profit</div>
+      <div class="profitvalue"><span id="profit">0.00</span> KES</div>
+    </div>
+    <button class="collectbtn" id="collectBtn">Collect 0.00 KES</button>
+  </div>
+  <div class="notice">DEMO MODE — uses virtual credits only. No deposits, withdrawals, or real-money gambling.</div>
+</div>
+<script>
+let balance=1000, stake=10, mult=1, running=false, crashed=false, hasBet=false, timer=null;
+let profit=0, collected=0;
+const $=id=>document.getElementById(id);
+function money(n){return n.toFixed(2)}
+function render(){
+  $('balance').textContent=money(balance);
+  $('stake').textContent=money(stake);
+  $('betText').textContent=money(stake)+' KES';
+  $('profit').textContent=money(profit);
+  $('collectBtn').textContent='Collect '+money(Math.max(0,profit))+' KES';
+  $('collectBtn').disabled=profit<=0;
+}
+function setStake(v){stake=Math.max(1,Math.min(25000,v));render()}
+$('minus').onclick=()=>setStake(stake-10); $('plus').onclick=()=>setStake(stake+10);
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>setStake(+b.dataset.v));
+function newRound(){
+  clearInterval(timer); running=false; crashed=false; hasBet=false; mult=1;
+  $('mult').textContent='1.00x'; $('status').textContent='Place your demo bet'; $('bet').classList.remove('cash'); $('bet').innerHTML='Bet<br><span id="betText">'+money(stake)+' KES</span>';
+  render();
+}
+function start(){
+  if(running)return;
+  running=true; crashed=false; mult=1;
+  const crashAt=(Math.random()*4+1.1);
+  $('status').textContent='Flying…';
+  timer=setInterval(()=>{
+    mult += 0.015 + mult*0.003;
+    $('mult').textContent=mult.toFixed(2)+'x';
+    $('fill').style.width=Math.min(90,20+mult*9)+'%';
+    if(mult>=crashAt){
+      clearInterval(timer); running=false; crashed=true; $('mult').textContent=crashAt.toFixed(2)+'x';
+      $('status').textContent='CRASHED'; $('bet').classList.remove('cash');
+      setTimeout(newRound,3000);
+    }
+  },70);
+}
+$('bet').onclick=()=>{
+  if(crashed)return;
+  if(!running){
+    if(balance<stake){$('status').textContent='Insufficient demo credits';return}
+    balance-=stake;hasBet=true;render();$('bet').classList.add('cash');
+    $('bet').innerHTML='Cash Out<br><span>'+money(stake*mult)+' KES</span>';start();
+  }else if(hasBet){
+    balance += stake*mult; hasBet=false; render();
+    $('bet').classList.remove('cash'); $('bet').innerHTML='Cashed Out<br><span>'+money(stake*mult)+' KES</span>';
+    $('status').textContent='Demo cash-out at '+mult.toFixed(2)+'x';
+  }
+};
+
+$('collectBtn').onclick=()=>{
+  if(profit<=0)return;
+  collected += profit;
+  balance += profit;
+  profit = 0;
+  render();
+  $('status').textContent='Collected '+money(collected)+' KES in demo credits';
+};
+
+const authModal=$('authModal'), authTitle=$('authTitle'), authSubmit=$('authSubmit'),
+      nameField=$('nameField'), authSwitch=$('authSwitch'), switchAuth=$('switchAuth');
+let authMode='signup';
+
+function openAuth(mode){
+  authMode=mode;
+  authModal.classList.add('show');
+  const signup=mode==='signup';
+  authTitle.textContent=signup?'Sign Up':'Login';
+  authSubmit.textContent=signup?'Create Account':'Login';
+  nameField.style.display=signup?'block':'none';
+  authSwitch.innerHTML=signup?'Already have an account? <button id="switchAuth">Login</button>':'New here? <button id="switchAuth">Sign Up</button>';
+  document.getElementById('switchAuth').onclick=()=>openAuth(signup?'login':'signup');
+}
+$('signupBtn').onclick=()=>openAuth('signup');
+$('loginBtn').onclick=()=>openAuth('login');
+$('closeAuth').onclick=()=>authModal.classList.remove('show');
+authModal.onclick=e=>{if(e.target===authModal)authModal.classList.remove('show')};
+
+authSubmit.onclick=()=>{
+  const contact=$('authContact').value.trim(), password=$('authPassword').value;
+  if(!contact || !password){alert('Please enter your login details.');return}
+  if(authMode==='signup' && !$('authName').value.trim()){alert('Please enter your name.');return}
+  const name=authMode==='signup' ? $('authName').value.trim() : contact;
+  localStorage.setItem('aviatorDemoUser',name);
+  $('loggedUser').textContent='Hi, '+name;
+  $('loggedUser').style.display='inline';
+  authModal.classList.remove('show');
+  $('status').textContent=authMode==='signup'?'Account created — demo mode':'Logged in — demo mode';
+};
+const savedUser=localStorage.getItem('aviatorDemoUser');
+if(savedUser){$('loggedUser').textContent='Hi, '+savedUser;$('loggedUser').style.display='inline';}
+
+render(); setTimeout(start,1200);
+</script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js");</script></body>
+</html>
